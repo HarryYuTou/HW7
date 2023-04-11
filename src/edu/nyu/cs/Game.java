@@ -9,20 +9,19 @@ import processing.core.*; // import the base Processing library
 import processing.sound.*; // import the processing sound library
 
 /**
- * Describe your game succinctly here, and update the author info below.
- * Some starter code has been included for your reference - feel free to delete or modify it.
- * 
- * @author Foo Barstein
- * @version 0.1
+ * This game is the simplified version of Aim Lab, a game trains players' aiming skills on Steam. It is used by pro players of CSGO and Valorant, as well as other FPS games.
+ * The goal of players when playing this game is to use their mouses to click the randomly-occur spots in the screen as quick as possible.
+ * @author Harry Yu (https://github.com/HarryYuTou)
+ * @version 1.0
  */
 public class Game extends PApplet {
 
   private SoundFile soundStartup; // will refer to a sound file to play when the program first starts
   private SoundFile soundClick; // will refer to a sound file to play when the user clicks the mouse
   private PImage imgMe; // will hold a photo of me
-  private ArrayList<Star> stars; // will hold an ArrayList of Star objects
-  private final int NUM_STARS = 20; // the number of stars to create
-  private final int POINTS_PER_STAR = 1; // the number of points to award the user for each star they destroy
+  private ArrayList<Aim> aims; // will hold an ArrayList of Aim objects
+  private final int aim_num = 32; // the number of aims to create
+  private final int POINTS_PER_Aim = 1; // the number of points to award the user for each aim they shoot
   private int score = 0; // the user's score
 
 
@@ -36,7 +35,7 @@ public class Game extends PApplet {
 
     // load up a sound file and play it once when program starts up
 		String cwd = Paths.get("").toAbsolutePath().toString(); // the current working directory as an absolute path
-		String path = Paths.get(cwd, "sounds", "vibraphon.mp3").toString(); // e.g "sounds/vibraphon.mp3" on Mac/Unix vs. "sounds\vibraphon.mp3" on Windows
+		String path = Paths.get(cwd, "sounds", "CSbackground.mp3").toString(); // e.g "sounds/vibraphon.mp3" on Mac/Unix vs. "sounds\vibraphon.mp3" on Windows
     this.soundStartup = new SoundFile(this, path);
     this.soundStartup.play();
 
@@ -45,20 +44,21 @@ public class Game extends PApplet {
     this.soundClick = new SoundFile(this, path); // if you're on Windows, you may have to change this to "sounds\\thump.aiff"
  
     // load up an image of me
-		path = Paths.get(cwd, "images", "me.png").toString(); // e.g "images/me.png" on Mac/Unix vs. "images\me.png" on Windows
+		path = Paths.get(cwd, "images", "csgo.jpg").toString(); // e.g "images/me.png" on Mac/Unix vs. "images\me.png" on Windows
     this.imgMe = loadImage(path);
 
     // some basic settings for when we draw shapes
     this.ellipseMode(PApplet.CENTER); // setting so ellipses radiate away from the x and y coordinates we specify.
     this.imageMode(PApplet.CENTER); // setting so the ellipse radiates away from the x and y coordinates we specify.
 
-    // create some stars, starting life at the center of the window
-    stars = new ArrayList<Star>();
-    for (int i=0; i<this.NUM_STARS; i++) {
-      // create a star and add it to the array list
-  		path = Paths.get(cwd, "images", "star.png").toString(); // e.g "images/star.png" on Mac/Unix vs. "images\star.png" on Windows
-      Star star = new Star(this, path, this.width/2, this.height/2);
-      this.stars.add(star);
+    // create some target aims, starting life at the center of the window
+    aims = new ArrayList<Aim>();
+    for (int i=0; i<this.aim_num; i++) {
+      // create aa aim object and add it to the array list
+  		path = Paths.get(cwd, "images", "aim.png").toString(); 
+      Aim aim = new Aim(this, path, this.width/2, this.height/2);
+      aim.Popup(); //use the popup method to randomly create aims on the screen
+      this.aims.add(aim);
     }
 	}
 
@@ -78,18 +78,17 @@ public class Game extends PApplet {
     this.fill(255, 255, 255); // set the r, g, b color to use for filling in any shapes we draw later.
     this.ellipse(this.mouseX, this.mouseY, 60, 60); // draw an ellipse wherever the mouse is
 
-    // draw all stars to their current position
-    for (int i=0; i<this.stars.size(); i++) {
-      Star star = this.stars.get(i); // get the current Star object from the ArrayList
-      star.moveRandomly(); // move the star by a random amount
-      star.draw(); // draw the star to the screen
-    }
-
     // show the score at the bottom of the window
     String scoreString = String.format("SCORE: %d", this.score);
     text(scoreString, this.width/2, this.height-50);
 
+    Aim aim = this.aims.get(0); // get the current aim object from the ArrayList 
+    aim.draw(); // draw the aim to the screen
+    
 	}
+
+
+
 
 	/**
 	 * This method is automatically called by Processing every time the user presses a key while viewing the map.
@@ -109,20 +108,23 @@ public class Game extends PApplet {
 	public void mouseClicked() {
 		System.out.println(String.format("Mouse clicked at: %d:%d.", this.mouseX, this.mouseY));
 
-    // check whether we have clicked on a star
-    for (int i=0; i<this.stars.size(); i++) {
-      Star star = this.stars.get(i); // get the current Star object from the ArrayList
-      // check whether the position where the user clicked was within this star's boundaries
-      if (star.overlaps(this.mouseX, this.mouseY, 10)) {
+    
+    for(int i=0;i<this.aims.size();i++) {
+      Aim aim = this.aims.get(i);
+      if (aim.overlaps(this.mouseX, this.mouseY, 10)) {
         // if so, award the user some points
-        score += POINTS_PER_STAR;        
+        score += POINTS_PER_Aim;        
         // play a thump sound
         this.soundClick.play();
-        // delete the star from the ArrayList
-        this.stars.remove(star);
-      }
+        // delete the aim from the ArrayList
+        this.aims.remove(aim);
+        // add one more random aim to the screen
+        aim = this.aims.get(i+1);
+        aim.draw();
     }
+      
 	}
+}
 
 	/**
 	 * This method is automatically called by Processing every time the user presses down and drags the mouse.
